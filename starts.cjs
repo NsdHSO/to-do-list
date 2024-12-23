@@ -12,4 +12,20 @@ app.listen(
     }
 ).then((address) => {
     console.log(`Server started at ${address}`)
+}).catch((err) => {
+    console.log(err)
+})
+
+app.addHook('onClose', (done) => {
+    console.log(`Server closed at ${JSON.stringify(done)}`)
+    done(new Error('Server closed'))
+})
+
+app.get('/iancu', (req, res) => {
+    console.log(req.query)
+    return res.send('Welcome to iancu!')
+})
+
+app.addHook('onReady', async () => {
+    console.log('Async is on ready!')
 })
