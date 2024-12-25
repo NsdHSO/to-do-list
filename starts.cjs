@@ -29,6 +29,13 @@ app.register(async function pluginOne(pluginInstance, opts) {
     pluginInstance.get('/one', async (req, res) => {
         res.send("plugin One")
     })
+
+    pluginInstance.register(async (pluginSecondInstance) => {
+        pluginSecondInstance.addHook('onRoute', buildHook('Plugin One inside'))
+        pluginSecondInstance.get('/one/inside', async (req, res) => {
+            res.send("plugin One inside")
+        })
+    })
 })
 
 app.register(async function pluginTwo(pluginInstance, opts) {
