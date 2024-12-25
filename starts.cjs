@@ -1,7 +1,13 @@
 const fastify = require('fastify')
-
+const fs = require('fs/promises')
 const serverOptions = {
-    logger: true
+    logger: {
+        level: 'debug',
+        transports: {
+            target: 'pino-pretty'
+        }
+    },
+    exposeHeadRoutes: false
 }
 const app = fastify(serverOptions)
 
@@ -16,16 +22,31 @@ app.listen(
     console.log(err)
 })
 
-app.addHook('onClose', (done) => {
-    console.log(`Server closed at ${JSON.stringify(done)}`)
-    done(new Error('Server closed'))
+app.addHook('onRoute', buildHook('root'))
+
+app.register(async function pluginOne(pluginInstance, opts) {
+    pluginInstance.addHook('onRoute', buildHook('Plugin One'))
+    pluginInstance.get('/one', async (req, res) => {
+        res.send("plugin One")
+    })
 })
 
-app.get('/iancu', (req, res) => {
-    console.log(req.query)
-    return res.send('Welcome to iancu!')
+app.register(async function pluginTwo(pluginInstance, opts) {
+    pluginInstance.addHook('onRoute', buildHook('Plugin Two'))
+    pluginInstance.get('/two', async (req, res) => {
+        res.send("plugin Two")
+    })
+    pluginInstance.register(async function pluginThree(subPluginInstance, opts) {
+        subPluginInstance.addHook('onRoute', buildHook('Plugin Three'))
+        subPluginInstance.get('/three', async (req, res) => {
+            res.send("plugin Three")
+        })
+    })
 })
 
-app.addHook('onReady', async () => {
-    console.log('Async is on ready!')
-})
+
+function buildHook(id) {
+    return function hook(routeOptions) {
+        console.log(`${id} hook called for route: ${routeOptions.method} ${routeOptions.url}`);
+    }
+}
