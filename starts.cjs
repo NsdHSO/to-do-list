@@ -57,3 +57,14 @@ function buildHook(id) {
         console.log(`${id} hook called for route: ${routeOptions.method} ${routeOptions.url}`);
     }
 }
+
+app.register(async function pluginFour(pluginInstance, opts) {
+    app.log.info('Plugin Four', opts.myPluginName.first)
+}, function (parent) {
+    return ({
+        prefix: 'V2',
+        myPluginName: {
+            first: 'Plugin Four',
+        },
+    })
+})
