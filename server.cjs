@@ -1,16 +1,6 @@
 const Fastify = require('fastify')
 const userRouter = require('./routes/users-router.cjs')
 
-function options(parent) {
-    return ({
-        prefix: 'V1',
-        myPlugin: {
-            first: parent.mySpecialProp
-        }
-    })
-}
-
-
 const app = Fastify({
     logger: {
         level: 'debug',
@@ -26,9 +16,16 @@ app.decorate('users',
         {name: 'Ian', age: 27},
         {name: 'And', age: 22},
     ])
-
+ function options (parent){
+    return ({
+        prefix: 'V1',
+        myPlugin: {
+            firstElement: parent.mySpecialProp,
+        }
+    })
+}
 app.register(userRouter, {prefix: 'v1'})
-app.decorate('mySpecialProp', 'root prop')
+app.decorate('mySpecialProp', 'pino-pretty')
 app.register(async function userRouterV2(fastify, options) {
     fastify.delete('/users/:name', (request, reply) => {
         const userFind = fastify.users.findIndex(user => user.name === request.params.name)
@@ -38,11 +35,9 @@ app.register(async function userRouterV2(fastify, options) {
 },
     {prefix:'v2'}
 )
-app.register(async function (fastify, options) {
-        app.log.error(options.myPlugin.first)
-    }, options
-)
-
+app.register(async function logConsole(fastify, options) {
+    console.log(options.myPlugin.firstElement)
+}, options)
 app.listen({
     port: 8080,
     host: '0.0.0.0',
