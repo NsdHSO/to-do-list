@@ -1,56 +1,54 @@
-const Fastify = require('fastify')
-const userRouter = require('./routes/users-router.cjs')
-const fp = require('fastify-plugin')
+const Fastify = require('fastify');
+const userRouter = require('./routes/users-router.cjs');
+const fp = require('fastify-plugin');
 
 async function boot() {
 
     const app = Fastify({
         logger: {
-            level: 'debug',
-            transports: {
+            level: 'debug', transports: {
                 target: 'pino-pretty'
             }
-        },
-    })
-    app.decorate('users',
-        [
-            {name: 'sam', age: 23},
-            {name: 'sam', age: 23},
-            {name: 'Ian', age: 27},
-            {name: 'And', age: 22},
-        ])
+        }
+    });
+    app.decorate('users', [{name: 'sam', age: 23}, {name: 'sam', age: 23}, {name: 'Ian', age: 27}, {
+        name: 'And',
+        age: 22
+    }]);
 
     function options(parent) {
         return ({
-            prefix: parent.version_prefix,
-            myPlugin: {
-                firstElement: parent.mySpecialProp,
+            prefix: parent.version_prefix, myPlugin: {
+                firstElement: parent.mySpecialProp
             }
-        })
+        });
     }
 
     app.addHook('onRequest', (request, reply, done) => {
-        request.log.info('request received I a 404 HTTP request...')
-        request.is404;
+        if (request.headers['x-is-admin'] === 'true') {
+            done();
+        } else {
+            let err = new Error('Not logged in');
+            err.status = 404;
+            done(err);
+        }
+    });
+    ;
 
-        done()
-    })
-    app.register((instance, opts) => {
-        instance.setNotFoundHandler((err, reply) => {
-            reply.send('Not found').status(404)
+    app.register((fastify, options) => {
+        fastify.get('/private', (request, reply) => {
+            reply.send('private');
+        });
+    }, options);
 
-        })
-    }, {prefix: '/iancu'})
-    app.register
-    await app.ready()
+    await app.ready();
 
     await app.listen({
-        port: 8080,
-        host: '0.0.0.0',
+        port: 8080, host: '0.0.0.0'
     }).then((_) => {
-        app.log.info('server started')
-        console.log(app.printRoutes())
-    })
+        app.log.info('server started');
+        console.log(app.printRoutes());
+    });
 }
 
-boot()
+boot();
